@@ -1,0 +1,7 @@
+data/
+__pycache__/
+*.pyc
+results/*.png
+!results/.gitkeep
+models/*.pt
+!models/.gitkeep
