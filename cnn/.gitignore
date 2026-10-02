@@ -1,0 +1,5 @@
+data/
+results/*.keras
+__pycache__/
+.venv/
+*.zip
