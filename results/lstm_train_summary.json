@@ -1,0 +1,16 @@
+{
+  "model": "lstm",
+  "best_epoch": 10,
+  "best_validation_loss": 0.18989515223850806,
+  "test_loss": 0.31050160192939175,
+  "test_accuracy": 0.8948082796063793,
+  "parameters": 211910,
+  "epochs_requested": 30,
+  "epochs_run": 17,
+  "batch_size": 128,
+  "learning_rate": 0.001,
+  "patience": 7,
+  "seed": 42,
+  "device": "cuda",
+  "training_seconds": 21.153671741485596
+}
