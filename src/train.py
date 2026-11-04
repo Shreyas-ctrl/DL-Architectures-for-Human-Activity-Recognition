@@ -10,7 +10,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -76,15 +75,49 @@ def train_one(model, train_loader, val_loader, epochs=40, lr=1e-3, patience=7, d
 def evaluate(model, loader, device="cpu"):
     model.eval().to(device)
     preds, trues = [], []
-    for xb, yb in loader:
-        preds += model(xb.to(device)).argmax(1).cpu().tolist()
-        trues += yb.tolist()
-    acc = accuracy_score(trues, preds)
-    prec, rec, f1, _ = precision_recall_fscore_support(trues, preds, average="macro", zero_division=0)
-    cm = confusion_matrix(trues, preds, labels=list(range(6)))
-    return {"accuracy": acc, "precision_macro": prec, "recall_macro": rec, "f1_macro": f1,
-            "confusion_matrix": cm.tolist(), "y_true": trues, "y_pred": preds}
 
+    for xb, yb in loader:
+        preds.extend(model(xb.to(device)).argmax(1).cpu().tolist())
+        trues.extend(yb.tolist())
+
+    y_true = np.asarray(trues, dtype=int)
+    y_pred = np.asarray(preds, dtype=int)
+
+    num_classes = 6
+    cm = np.zeros((num_classes, num_classes), dtype=int)
+
+    for true, pred in zip(y_true, y_pred):
+        cm[true, pred] += 1
+
+    accuracy = float(np.mean(y_true == y_pred))
+
+    precisions, recalls, f1_scores = [], [], []
+
+    for i in range(num_classes):
+        tp = cm[i, i]
+        fp = cm[:, i].sum() - tp
+        fn = cm[i, :].sum() - tp
+
+        precision = tp / (tp + fp) if (tp + fp) else 0.0
+        recall = tp / (tp + fn) if (tp + fn) else 0.0
+        f1 = (
+            2 * precision * recall / (precision + recall)
+            if (precision + recall) else 0.0
+        )
+
+        precisions.append(precision)
+        recalls.append(recall)
+        f1_scores.append(f1)
+
+    return {
+        "accuracy": accuracy,
+        "precision_macro": float(np.mean(precisions)),
+        "recall_macro": float(np.mean(recalls)),
+        "f1_macro": float(np.mean(f1_scores)),
+        "confusion_matrix": cm.tolist(),
+        "y_true": trues,
+        "y_pred": preds,
+    }
 
 def plot_cm(cm, title, path):
     fig, ax = plt.subplots(figsize=(6, 5))
